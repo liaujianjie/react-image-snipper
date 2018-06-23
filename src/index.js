@@ -3,6 +3,9 @@ import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 
 import defaultStyles from './defaultStyles';
+import Crosshair from './components/Crosshair';
+import AnchorPoint from './components/AnchorPoint';
+import AnchorLine from './components/AnchorLine';
 
 /* eslint-disable react/no-deprecated */
 /* eslint-disable react/no-find-dom-node */
@@ -97,9 +100,6 @@ class Cropper extends React.Component {
       () => {
         // calc frame width height
         let { originX, originY } = this.props;
-        const { disabled } = this.props;
-
-        if (disabled) return;
 
         const { imgWidth, imgHeight } = this.state;
         const { frameWidth, frameHeight } = this.state;
@@ -151,29 +151,20 @@ class Cropper extends React.Component {
 
   // adjust image height when image size scaleing change, also initialize styles
   imgGetSizeBeforeLoad() {
-    // trick way to get natural width of image after component did mount
-    setTimeout(() => {
-      const img = findDOMNode(this.img);
-      if (img && img.naturalWidth) {
-        // image scaleing
-        const imgHeight = parseInt(
-          (img.offsetWidth / img.naturalWidth) * img.naturalHeight
-        );
-        // resize imgHeight
-        this.setState(
-          {
-            imgHeight,
-            imgLoaded: true,
-          },
-          this.initStyles
-        );
-        // before image loaded hook
-        this.props.beforeImgLoad();
-      } else if (img) {
-        // catch if image natural width is 0
-        this.imgGetSizeBeforeLoad();
-      }
-    }, 0);
+    const img = findDOMNode(this.img);
+    // if (img && img.naturalWidth) {
+    // image scaling
+    const imgHeight = parseInt(
+      (img.offsetWidth / img.naturalWidth) * img.naturalHeight
+    );
+    // resize imgHeight
+    this.setState(
+      {
+        imgHeight,
+        imgLoaded: true,
+      },
+      this.initStyles
+    );
   }
 
   // frame width, frame height, position left, position top
@@ -553,8 +544,6 @@ class Cropper extends React.Component {
       src,
     } = this.state;
 
-    const { disabled } = this.props;
-
     const imageNode = (
       <div
         style={styles.source}
@@ -563,7 +552,6 @@ class Cropper extends React.Component {
         }}
       >
         <img
-          crossOrigin="anonymous"
           src={src}
           width={imgWidth}
           height={imgHeight}
@@ -575,24 +563,6 @@ class Cropper extends React.Component {
         />
       </div>
     );
-    // disabled cropper
-    if (disabled) {
-      return (
-        <div
-          style={{
-            ...styles.container,
-            position: 'relative',
-            height: imgHeight,
-          }}
-          ref={ref => {
-            this.container = ref;
-          }}
-        >
-          {imageNode}
-          <div style={{ ...styles.modal, ...styles.modal_disabled }} />
-        </div>
-      );
-    }
 
     return (
       <div
@@ -630,7 +600,6 @@ class Cropper extends React.Component {
               <div style={styles.clone}>
                 <img
                   src={src}
-                  crossOrigin="anonymous"
                   width={imgWidth}
                   height={imgHeight}
                   style={{
@@ -647,67 +616,16 @@ class Cropper extends React.Component {
               {/* move element */}
               <span data-action="move" style={styles.move} />
               {/* move center element */}
-              <span
-                data-action="move"
-                style={{ ...styles.dot, ...styles.dotCenter }}
-              >
-                <span
-                  style={{
-                    ...styles.dotInner,
-                    ...styles.dotInnerCenterVertical,
-                  }}
-                />
-                <span
-                  style={{
-                    ...styles.dotInner,
-                    ...styles.dotInnerCenterHorizontal,
-                  }}
-                />
-              </span>
+              <Crosshair />
 
-              {/* frame dot elements */}
-              <span data-action="ne" style={{ ...styles.dot, ...styles.dotNE }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerNE }} />
-              </span>
-              <span data-action="n" style={{ ...styles.dot, ...styles.dotN }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerN }} />
-              </span>
-              <span data-action="nw" style={{ ...styles.dot, ...styles.dotNW }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerNW }} />
-              </span>
-              <span data-action="e" style={{ ...styles.dot, ...styles.dotE }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerE }} />
-              </span>
-              <span data-action="w" style={{ ...styles.dot, ...styles.dotW }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerW }} />
-              </span>
-              <span data-action="se" style={{ ...styles.dot, ...styles.dotSE }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerSE }} />
-              </span>
-              <span data-action="s" style={{ ...styles.dot, ...styles.dotS }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerS }} />
-              </span>
-              <span data-action="sw" style={{ ...styles.dot, ...styles.dotSW }}>
-                <span style={{ ...styles.dotInner, ...styles.dotInnerSW }} />
-              </span>
+              {/* anchor lines and points */}
+              {Object.values(AnchorPoint.Point).map(point => (
+                <AnchorPoint key={point} point={point} />
+              ))}
+              {Object.values(AnchorLine.Side).map(side => (
+                <AnchorLine key={side} side={side} />
+              ))}
 
-              {/* frame line elements */}
-              <span
-                data-action="n"
-                style={{ ...styles.line, ...styles.lineN }}
-              />
-              <span
-                data-action="s"
-                style={{ ...styles.line, ...styles.lineS }}
-              />
-              <span
-                data-action="w"
-                style={{ ...styles.line, ...styles.lineW }}
-              />
-              <span
-                data-action="e"
-                style={{ ...styles.line, ...styles.lineE }}
-              />
             </div>
           </div>
         ) : null}
@@ -725,10 +643,8 @@ Cropper.propTypes = {
   height: PropTypes.number,
   fixedRatio: PropTypes.bool,
   allowNewSelection: PropTypes.bool,
-  disabled: PropTypes.bool,
   styles: PropTypes.object,
   onImgLoad: PropTypes.func,
-  beforeImgLoad: PropTypes.func,
   onChange: PropTypes.func,
 };
 
@@ -742,7 +658,6 @@ Cropper.defaultProps = {
   originY: 0,
   styles: {},
   onImgLoad: function() {},
-  beforeImgLoad: function() {},
 };
 
 export default Cropper;
