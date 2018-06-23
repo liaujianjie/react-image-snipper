@@ -1,0 +1,52 @@
+{
+  "name": "react-image-snipper",
+  "version": "1.0.0",
+  "description": "react component for cropping images",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/assets"
+  },
+  "keywords": [
+    "react",
+    "image",
+    "cropper",
+    "tool",
+    "snip",
+    "snipper",
+    "crop"
+  ],
+  "author": "Liau Jian Jie",
+  "license": "MIT",
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "@storybook/react": "^4.0.0-alpha.10",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.4",
+    "css-loader": "^0.28.11",
+    "eslint": "^5.0.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-prettier": "^2.6.1",
+    "eslint-plugin-react": "^7.9.1",
+    "file-loader": "^1.1.11",
+    "html-webpack-plugin": "^3.2.0",
+    "jest": "^23.1.0",
+    "lint-staged": "^7.2.0",
+    "prettier": "^1.13.5",
+    "style-loader": "^0.21.0",
+    "ts-loader": "^4.4.1",
+    "webpack": "^4.12.0",
+    "webpack-cli": "^3.0.8",
+    "webpack-dev-server": "^3.1.4"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.2",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1"
+  }
+}
