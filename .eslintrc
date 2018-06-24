@@ -10,7 +10,8 @@
   "plugins": [
     "import",
     "prettier",
-    "react"
+    "react",
+    "jest"
   ],
   "parser": "babel-eslint",
   "parserOptions": {
@@ -21,7 +22,8 @@
   },
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "jest/globals": true
   },
   "rules": {
     "prefer-const": "error",

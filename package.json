@@ -4,7 +4,7 @@
   "description": "react component for cropping images",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/assets"
   },
   "keywords": [
@@ -29,8 +29,11 @@
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.4",
     "css-loader": "^0.28.11",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "eslint": "^5.0.0",
     "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-jest": "^21.17.0",
     "eslint-plugin-prettier": "^2.6.1",
     "eslint-plugin-react": "^7.9.1",
     "file-loader": "^1.1.11",
@@ -48,5 +51,8 @@
     "prop-types": "^15.6.2",
     "react": "^16.4.1",
     "react-dom": "^16.4.1"
+  },
+  "jest": {
+    "setupTestFrameworkScriptFile": "<rootDir>/config/enzyme.js"
   }
 }
