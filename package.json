@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/assets"
+    "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/assets",
+    "precommit": "lint-staged"
   },
   "keywords": [
     "react",
