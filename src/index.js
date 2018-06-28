@@ -45,8 +45,7 @@ class Cropper extends React.Component {
       // cropper original position(y axis), accroding to image top
       originY,
       // dragging start, position's pageX and pageY
-      originalPageX: 0,
-      originalPageY: 0,
+      originalPointerPos: { x: 0, y: 0 },
       // frame width, change only dragging stop
       frameWidth: width,
       // frame height, change only dragging stop
@@ -221,7 +220,7 @@ class Cropper extends React.Component {
 
   createNewFrame(e) {
     if (!this.state.dragging) return;
-    const { originalPageX, originalPageY, originX, originY } = this.state;
+    const { originalPointerPos, originX, originY } = this.state;
     const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
     const newRect = getNewRect({
@@ -231,7 +230,7 @@ class Cropper extends React.Component {
         width: 0,
         height: 0,
       },
-      originalPointerPos: { x: originalPageX, y: originalPageY },
+      originalPointerPos,
       currentPointerPos: { x: pageX, y: pageY },
       action: getActionForNew({
         originalPointerPos: { x: originX, y: originY },
@@ -251,8 +250,7 @@ class Cropper extends React.Component {
     const {
       originX,
       originY,
-      originalPageX,
-      originalPageY,
+      originalPointerPos,
       frameWidth,
       frameHeight,
     } = this.state;
@@ -266,7 +264,7 @@ class Cropper extends React.Component {
         width: frameWidth,
         height: frameHeight,
       },
-      originalPointerPos: { x: originalPageX, y: originalPageY },
+      originalPointerPos,
       currentPointerPos: { x: pageX, y: pageY },
       action: Action.MOVE,
     });
@@ -283,8 +281,7 @@ class Cropper extends React.Component {
     const {
       originX,
       originY,
-      originalPageX,
-      originalPageY,
+      originalPointerPos,
       frameWidth,
       frameHeight,
     } = this.state;
@@ -298,7 +295,7 @@ class Cropper extends React.Component {
         width: frameWidth,
         height: frameHeight,
       },
-      originalPointerPos: { x: originalPageX, y: originalPageY },
+      originalPointerPos,
       currentPointerPos: { x: pageX, y: pageY },
       action,
     });
@@ -333,13 +330,12 @@ class Cropper extends React.Component {
 
     const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
-    // if drag or move or allow new selection, change originalPageX, originalPageY, dragging state
+    // if drag or move or allow new selection, change originalPointerPos and dragging state
     if (action || allowNewSelection) {
       e.preventDefault();
-      // drag start, set originalPageX, originalPageY for dragging start point
+      // drag start, set originalPointerPos for dragging start point
       this.setState({
-        originalPageX: pageX,
-        originalPageY: pageY,
+        originalPointerPos: { x: pageX, y: pageY },
         dragging: true,
         action,
       });

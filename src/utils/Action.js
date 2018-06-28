@@ -9,6 +9,7 @@ const Action = {
   SOUTH_EAST: 'se',
   SOUTH_WEST: 'sw',
 };
+Object.freeze(Action);
 
 export const GroupedAction = {
   NORTH: [Action.NORTH_EAST, Action.NORTH_WEST, Action.NORTH],
@@ -16,5 +17,6 @@ export const GroupedAction = {
   EAST: [Action.NORTH_EAST, Action.SOUTH_EAST, Action.EAST],
   WEST: [Action.NORTH_WEST, Action.SOUTH_WEST, Action.WEST],
 };
+Object.freeze(GroupedAction);
 
 export default Action;

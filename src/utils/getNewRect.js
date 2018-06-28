@@ -1,5 +1,12 @@
 import Action, { GroupedAction } from './Action';
 
+/**
+ * Calculates a new `Rect` from interaction with anchor points or the box itself.
+ * @param {Rect} originalRect the original to calculate the new rect from
+ * @param {Point} originalPointerPos the original pointer position
+ * @param {Point} currentPointerPos the current pointer position
+ * @param {Action} action the action
+ */
 const getNewRect = ({
   originalRect,
   originalPointerPos,
