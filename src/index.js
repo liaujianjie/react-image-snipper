@@ -6,6 +6,9 @@ import defaultStyles from './defaultStyles';
 import Crosshair from './components/Crosshair';
 import AnchorPoint from './components/AnchorPoint';
 import AnchorLine from './components/AnchorLine';
+import Action from './utils/Action';
+import getNewRect from './utils/getNewRect';
+import getActionForNew from './utils/getActionForNew';
 
 /* eslint-disable react/no-deprecated */
 /* eslint-disable react/no-find-dom-node */
@@ -42,15 +45,13 @@ class Cropper extends React.Component {
       // cropper original position(y axis), accroding to image top
       originY,
       // dragging start, position's pageX and pageY
-      startPageX: 0,
-      startPageY: 0,
+      originalPageX: 0,
+      originalPageY: 0,
       // frame width, change only dragging stop
       frameWidth: width,
       // frame height, change only dragging stop
       frameHeight: fixedRatio ? width / ratio : height,
       dragging: false,
-      maxLeft: 0,
-      maxTop: 0,
       action: null,
       imgLoaded: false,
       styles: { ...defaultStyles, ...styles },
@@ -101,70 +102,49 @@ class Cropper extends React.Component {
         // calc frame width height
         let { originX, originY } = this.props;
 
-        const { imgWidth, imgHeight } = this.state;
-        const { frameWidth, frameHeight } = this.state;
-
-        const maxLeft = imgWidth - frameWidth;
-        const maxTop = imgHeight - frameHeight;
+        const { imgWidth, imgHeight, frameWidth, frameHeight } = this.state;
 
         if (originX + frameWidth >= imgWidth) {
           originX = imgWidth - frameWidth;
-          this.setState({
-            originX,
-          });
+          this.setState({ originX });
         }
         if (originY + frameHeight >= imgHeight) {
           originY = imgHeight - frameHeight;
-          this.setState({
-            originY,
-          });
+          this.setState({ originY });
         }
 
-        this.setState({
-          maxLeft,
-          maxTop,
-        });
         // calc clone position
         this.calcPosition(frameWidth, frameHeight, originX, originY, () => {
-          const {
-            frameWidth4Style,
-            frameHeight4Style,
-            toImgTop4Style,
-            toImgLeft4Style,
-          } = this.state;
-
-          this.setState({
-            frameWidth: frameWidth4Style,
-            frameHeight: frameHeight4Style,
-            originX: toImgLeft4Style,
-            originY: toImgTop4Style,
+          this.setState(state => {
+            const {
+              frameWidth4Style,
+              frameHeight4Style,
+              toImgTop4Style,
+              toImgLeft4Style,
+            } = state;
+            return {
+              frameWidth: frameWidth4Style,
+              frameHeight: frameHeight4Style,
+              originX: toImgLeft4Style,
+              originY: toImgTop4Style,
+            };
           });
         });
       }
     );
   }
 
-  // image onloaded hook
-  imgOnLoad() {
-    this.props.onImgLoad();
-  }
-
   // adjust image height when image size scaleing change, also initialize styles
   imgGetSizeBeforeLoad() {
     const img = findDOMNode(this.img);
-    // if (img && img.naturalWidth) {
-    // image scaling
-    const imgHeight = parseInt(
-      (img.offsetWidth / img.naturalWidth) * img.naturalHeight
-    );
-    // resize imgHeight
-    this.setState(
-      {
-        imgHeight,
-        imgLoaded: true,
-      },
-      this.initStyles
-    );
+    if (img && img.naturalWidth) {
+      // image scaling
+      const imgHeight = parseInt(
+        (img.offsetWidth / img.naturalWidth) * img.naturalHeight
+      );
+      // resize imgHeight
+      this.setState({ imgHeight, imgLoaded: true }, this.initStyles);
+    }
   }
 
   // frame width, frame height, position left, position top
@@ -239,165 +219,96 @@ class Cropper extends React.Component {
     );
   }
 
-  // create a new frame, and drag, so frame width and height is became larger.
   createNewFrame(e) {
-    if (this.state.dragging) {
-      // click or touch event
-      const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
+    if (!this.state.dragging) return;
+    const { originalPageX, originalPageY, originX, originY } = this.state;
+    const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
-      const { ratio, fixedRatio } = this.props;
+    const newRect = getNewRect({
+      originalRect: {
+        x: originX,
+        y: originY,
+        width: 0,
+        height: 0,
+      },
+      originalPointerPos: { x: originalPageX, y: originalPageY },
+      currentPointerPos: { x: pageX, y: pageY },
+      action: getActionForNew({
+        originalPointerPos: { x: originX, y: originY },
+        currentPointerPos: { x: pageX, y: pageY },
+      }),
+    });
 
-      const {
-        frameWidth,
-        frameHeight,
-        startPageX,
-        startPageY,
-        originX,
-        originY,
-      } = this.state;
-      // click or touch point's offset from source image top
-      const _x = pageX - startPageX;
-      const _y = pageY - startPageY;
-
-      // frame new width, height, left, top
-      const _width = frameWidth + Math.abs(_x);
-      const _height = fixedRatio
-        ? (frameWidth + Math.abs(_x)) / ratio
-        : frameHeight + Math.abs(_y);
-      let _left = originX;
-      let _top = originY;
-
-      if (_y < 0) {
-        // drag and resize to top, top changing
-        _top = fixedRatio
-          ? originY - Math.abs(_x) / ratio
-          : originY - Math.abs(_y);
-      }
-
-      if (_x < 0) {
-        // drag and resize, go to left, left changing
-        _left = originX + _x;
-      }
-      // calc position
-      return this.calcPosition(_width, _height, _left, _top);
-    }
+    this.setState({
+      toImgLeft4Style: newRect.x,
+      toImgTop4Style: newRect.y,
+      frameWidth4Style: newRect.width,
+      frameHeight4Style: newRect.height,
+    });
   }
 
-  // frame move handler
-  frameMove(e) {
+  handleMove(e) {
     const {
       originX,
       originY,
-      startPageX,
-      startPageY,
+      originalPageX,
+      originalPageY,
       frameWidth,
       frameHeight,
-      maxLeft,
-      maxTop,
     } = this.state;
 
     const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
-    let _x = pageX - startPageX + originX;
-    let _y = pageY - startPageY + originY;
-    if (pageX < 0 || pageY < 0) return false;
+    const newRect = getNewRect({
+      originalRect: {
+        x: originX,
+        y: originY,
+        width: frameWidth,
+        height: frameHeight,
+      },
+      originalPointerPos: { x: originalPageX, y: originalPageY },
+      currentPointerPos: { x: pageX, y: pageY },
+      action: Action.MOVE,
+    });
 
-    if (_x > maxLeft) _x = maxLeft;
-    if (_y > maxTop) _y = maxTop;
-    // frame width, frame height not change, top and left changing
-    this.calcPosition(frameWidth, frameHeight, _x, _y);
+    this.setState({
+      toImgLeft4Style: newRect.x,
+      toImgTop4Style: newRect.y,
+      frameWidth4Style: newRect.width,
+      frameHeight4Style: newRect.height,
+    });
   }
 
-  // drag dot to different direction
-  frameDotMove(dir, e) {
-    const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
-
-    const { ratio, fixedRatio } = this.props;
-
+  handleAnchorMove(action, e) {
     const {
-      startPageX,
-      startPageY,
       originX,
       originY,
-      frameWidth4Style,
-      frameHeight4Style,
+      originalPageX,
+      originalPageY,
       frameWidth,
       frameHeight,
-      imgWidth,
-      imgHeight,
     } = this.state;
 
-    if (pageY !== 0 && pageX !== 0) {
-      // current drag position offset x and y to first drag start position
-      const _x = pageX - startPageX;
-      const _y = pageY - startPageY;
+    const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
-      let _width = 0;
-      let _height = 0;
-      let _top = 0;
-      let _left = 0;
-      // just calc width, height, left, top in each direction
-      switch (dir) {
-        case 'ne':
-          _width = frameWidth + _x;
-          _height = fixedRatio ? _width / ratio : frameHeight - _y;
-          _left = originX;
-          _top = fixedRatio ? originY - _x / ratio : originY + _y;
-          break;
-        case 'e':
-          _width = frameWidth + _x;
-          _height = fixedRatio ? _width / ratio : frameHeight;
-          _left = originX;
-          _top = fixedRatio ? originY - (_x / ratio) * 0.5 : originY;
-          break;
-        case 'se':
-          _width = frameWidth + _x;
-          _height = fixedRatio ? _width / ratio : frameHeight + _y;
-          _left = originX;
-          _top = originY;
-          break;
-        case 'n':
-          _height = frameHeight - _y;
-          _width = fixedRatio ? _height * ratio : frameWidth;
-          _left = fixedRatio ? originX + _y * ratio * 0.5 : originX;
-          _top = originY + _y;
-          break;
-        case 'nw':
-          _width = frameWidth - _x;
-          _height = fixedRatio ? _width / ratio : frameHeight - _y;
-          _left = originX + _x;
-          _top = fixedRatio ? originY + _x / ratio : originY + _y;
-          break;
-        case 'w':
-          _width = frameWidth - _x;
-          _height = fixedRatio ? _width / ratio : frameHeight;
-          _left = originX + _x;
-          _top = fixedRatio ? originY + (_x / ratio) * 0.5 : originY;
-          break;
-        case 'sw':
-          _width = frameWidth - _x;
-          _height = fixedRatio ? _width / ratio : frameHeight + _y;
-          _left = originX + _x;
-          _top = originY;
-          break;
-        case 's':
-          _height = frameHeight + _y;
-          _width = fixedRatio ? _height * ratio : frameWidth;
-          _left = fixedRatio ? originX - _y * ratio * 0.5 : originX;
-          _top = originY;
-          break;
-        default:
-          break;
-      }
+    const newRect = getNewRect({
+      originalRect: {
+        x: originX,
+        y: originY,
+        width: frameWidth,
+        height: frameHeight,
+      },
+      originalPointerPos: { x: originalPageX, y: originalPageY },
+      currentPointerPos: { x: pageX, y: pageY },
+      action,
+    });
 
-      if (_width > imgWidth || _height > imgHeight) {
-        if (frameWidth4Style >= imgWidth || frameHeight4Style >= imgHeight) {
-          return false;
-        }
-      }
-
-      return this.calcPosition(_width, _height, _left, _top);
-    }
+    this.setState({
+      toImgLeft4Style: newRect.x,
+      toImgTop4Style: newRect.y,
+      frameWidth4Style: newRect.width,
+      frameHeight4Style: newRect.height,
+    });
   }
 
   // judge whether to create new frame, frame or frame dot move acroding to action
@@ -407,8 +318,8 @@ class Cropper extends React.Component {
       const { action } = this.state;
 
       if (!action) return this.createNewFrame(e);
-      if (action === 'move') return this.frameMove(e);
-      this.frameDotMove(action, e);
+      if (action === Action.MOVE) return this.handleMove(e);
+      this.handleAnchorMove(action, e);
     }
   }
 
@@ -422,13 +333,13 @@ class Cropper extends React.Component {
 
     const { pageX, pageY } = e.pageX ? e : e.targetTouches[0];
 
-    // if drag or move or allow new selection, change startPageX, startPageY, dragging state
+    // if drag or move or allow new selection, change originalPageX, originalPageY, dragging state
     if (action || allowNewSelection) {
       e.preventDefault();
-      // drag start, set startPageX, startPageY for dragging start point
+      // drag start, set originalPageX, originalPageY for dragging start point
       this.setState({
-        startPageX: pageX,
-        startPageY: pageY,
+        originalPageX: pageX,
+        originalPageY: pageY,
         dragging: true,
         action,
       });
@@ -559,7 +470,6 @@ class Cropper extends React.Component {
             this.img = ref;
           }}
           style={{ ...styles.img, ...styles.source_img }}
-          onLoad={this.imgOnLoad.bind(this)}
         />
       </div>
     );
@@ -615,17 +525,15 @@ class Cropper extends React.Component {
 
               {/* move element */}
               <span data-action="move" style={styles.move} />
-              {/* move center element */}
-              <Crosshair />
 
-              {/* anchor lines and points */}
+              {/* crosshair, anchor lines and anchor points */}
+              <Crosshair />
               {Object.values(AnchorPoint.Point).map(point => (
                 <AnchorPoint key={point} point={point} />
               ))}
               {Object.values(AnchorLine.Side).map(side => (
                 <AnchorLine key={side} side={side} />
               ))}
-
             </div>
           </div>
         ) : null}
@@ -644,7 +552,6 @@ Cropper.propTypes = {
   fixedRatio: PropTypes.bool,
   allowNewSelection: PropTypes.bool,
   styles: PropTypes.object,
-  onImgLoad: PropTypes.func,
   onChange: PropTypes.func,
 };
 
