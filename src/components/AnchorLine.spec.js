@@ -4,7 +4,8 @@ import AnchorLine from './AnchorLine';
 
 describe('<AnchorLine />', () => {
   test('should pass side to data-action attribute', () => {
-    const wrapper = shallow(<AnchorLine side={AnchorLine.Side.NORTH} />);
-    expect(wrapper.find('[data-action="n"]').length).toBe(1);
+    const side = AnchorLine.Side.NORTH;
+    const wrapper = shallow(<AnchorLine side={side} />);
+    expect(wrapper.find(`[data-action="${side}"]`)).toHaveLength(1);
   });
 });

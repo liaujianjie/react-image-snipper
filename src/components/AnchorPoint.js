@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styles from '../styles.css';
-console.log(styles)
 
 const AnchorPoint = ({ point }) => {
   const pointUppercase = point.toUpperCase();
