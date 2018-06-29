@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from '../defaultStyles';
+import styles from '../styles.css';
+console.log(styles)
 
 const AnchorPoint = ({ point }) => {
   const pointUppercase = point.toUpperCase();
@@ -12,9 +13,11 @@ const AnchorPoint = ({ point }) => {
     <span>
       <span
         data-action={point}
-        style={{ ...styles.dot, ...styles[styleNames.dot] }}
+        className={[styles.dot, styles[styleNames.dot]].join(' ')}
       >
-        <span style={{ ...styles.dotInner, ...styles[styleNames.dotInner] }} />
+        <span
+          className={[styles.dotInner, styles[styleNames.dotInner]].join(' ')}
+        />
       </span>
     </span>
   );

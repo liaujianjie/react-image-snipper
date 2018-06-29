@@ -1,12 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from '../defaultStyles';
+import styles from '../styles.css';
 
 const AnchorLine = ({ side }) => {
   const sideUppercase = side.toUpperCase();
   const styleName = `line${sideUppercase}`;
   return (
-    <span data-action={side} style={{ ...styles.line, ...styles[styleName] }} />
+    <span
+      data-action={side}
+      className={[styles.line, styles[styleName]].join(' ')}
+    />
   );
 };
 

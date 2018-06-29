@@ -19,12 +19,23 @@ module.exports = (baseConfig, env, defaultConfig) => {
           },
         },
       ],
+    },
+    {
+      test: /\.css$/,
+      include: path.resolve(__dirname, '../src'),
+      loaders: [
+        'style-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            modules: true,
+            localIdentName: '[name]__[local]___[hash:base64:5]',
+            importLoaders: 1,
+          },
+        },
+        'postcss-loader',
+      ],
     }
-    // {
-    //   test: /\.css$/,
-    //   include: path.resolve(__dirname, '../src'),
-    //   loaders: ['style-loader', 'css-loader'],
-    // }
   );
 
   // defaultConfig.resolve.extensions.push('.ts', '.tsx');

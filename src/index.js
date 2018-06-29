@@ -1,12 +1,10 @@
 import React from 'react';
-import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 
 // Style
-import defaultStyles from './defaultStyles';
+import styles from './styles.css';
 
 // Components
-import Crosshair from './components/Crosshair';
 import AnchorPoint from './components/AnchorPoint';
 import AnchorLine from './components/AnchorLine';
 
@@ -229,13 +227,13 @@ class Cropper extends React.Component {
     } = this.state;
 
     const imageNode = (
-      <div style={defaultStyles.source} ref={this.sourceNode}>
+      <div className={styles.source} ref={this.sourceNode}>
         <img
           src={src}
           width={imageWidth}
           height={imageHeight}
           ref={this.img}
-          style={{ ...defaultStyles.img, ...defaultStyles.source_img }}
+          className={[styles.img, styles.source_img].join(' ')}
         />
       </div>
     );
@@ -245,7 +243,6 @@ class Cropper extends React.Component {
         onMouseDown={this.handleDragStart.bind(this)}
         onTouchStart={this.handleDragStart.bind(this)}
         style={{
-          ...defaultStyles.container,
           position: 'relative',
           height: imageHeight,
         }}
@@ -254,25 +251,25 @@ class Cropper extends React.Component {
         {imageNode}
         {imageLoaded ? (
           <div>
-            <div style={defaultStyles.modal} />
+            <div className={styles.modal} />
             {/* frame container */}
             <div
+              className={styles.frame}
               style={{
-                ...defaultStyles.frame,
-                ...(isDragging ? defaultStyles.dragging_frame : {}),
+                ...(isDragging ? styles.dragging_frame : {}),
                 ...getStyleFromRect(this.state.currentRect),
                 display: 'block',
               }}
               ref={this.frameNode}
             >
               {/* clone img */}
-              <div style={defaultStyles.clone}>
+              <div className={styles.clone}>
                 <img
                   src={src}
                   width={imageWidth}
                   height={imageHeight}
+                  className={styles.img}
                   style={{
-                    ...defaultStyles.img,
                     marginLeft: -1 * this.state.currentRect.x,
                     marginTop: -1 * this.state.currentRect.y,
                   }}
@@ -281,10 +278,9 @@ class Cropper extends React.Component {
               </div>
 
               {/* move element */}
-              <span data-action="move" style={defaultStyles.move} />
+              <span data-action="move" className={styles.move} />
 
-              {/* crosshair, anchor lines and anchor points */}
-              <Crosshair />
+              {/* anchor lines and anchor points */}
               {Object.values(AnchorPoint.Point).map(point => (
                 <AnchorPoint key={point} point={point} />
               ))}
