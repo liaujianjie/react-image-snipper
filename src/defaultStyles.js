@@ -30,7 +30,7 @@ const defaultStyles = {
   },
 
   dragging_frame: {
-    opacity: 0.8,
+    // opacity: 0.8,
   },
 
   source: {
@@ -59,8 +59,8 @@ const defaultStyles = {
     cursor: 'move',
     outline: '1px dashed #ff0000',
     backgroundColor: 'transparent',
+    transform: 'translate3d(0,0,0)',
   },
-
   dot: {
     zIndex: 10,
   },
