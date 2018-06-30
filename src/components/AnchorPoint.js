@@ -9,15 +9,13 @@ const AnchorPoint = ({ point }) => {
     dotInner: `dotInner${pointUppercase}`,
   };
   return (
-    <span>
+    <span
+      data-action={point}
+      className={[styles.dot, styles[styleNames.dot]].join(' ')}
+    >
       <span
-        data-action={point}
-        className={[styles.dot, styles[styleNames.dot]].join(' ')}
-      >
-        <span
-          className={[styles.dotInner, styles[styleNames.dotInner]].join(' ')}
-        />
-      </span>
+        className={[styles.dotInner, styles[styleNames.dotInner]].join(' ')}
+      />
     </span>
   );
 };
