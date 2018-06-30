@@ -82,13 +82,19 @@ class Cropper extends React.Component {
   }
 
   handleMove(action, e) {
-    const { originalRect, originalPointerPos } = this.state;
+    const {
+      originalRect,
+      originalPointerPos,
+      imageHeight,
+      imageWidth,
+    } = this.state;
     const { pageX: x, pageY: y } = e.pageX ? e : e.targetTouches[0];
     const currentRect = getNewRect({
       originalRect,
       originalPointerPos,
       currentPointerPos: { x, y },
       action,
+      imageSize: { height: imageHeight, width: imageWidth },
     });
 
     this.setState({ currentRect });
