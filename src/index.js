@@ -45,11 +45,9 @@ class Cropper extends React.Component {
     document.addEventListener('touchmove', this.handleDrag.bind(this));
     document.addEventListener('mouseup', this.handleDragStop.bind(this));
     document.addEventListener('touchend', this.handleDragStop.bind(this));
-    this.imgGetSizeBeforeLoad();
   }
 
   componentWillUnmount() {
-    // cleanup
     document.removeEventListener('mousemove', this.handleDrag.bind(this));
     document.removeEventListener('touchmove', this.handleDrag.bind(this));
     document.removeEventListener('mouseup', this.handleDragStop.bind(this));
@@ -68,8 +66,7 @@ class Cropper extends React.Component {
     this.setState({ imageWidth: container.offsetWidth });
   }
 
-  // adjust image height when image size scaleing change, also initialize styles
-  imgGetSizeBeforeLoad() {
+  updateImageState() {
     const img = this.img.current;
     if (img && img.naturalWidth) {
       // image scaling
@@ -105,12 +102,12 @@ class Cropper extends React.Component {
       event.preventDefault();
       const { action } = this.state;
 
-      if (!action) return this.createNewFrame(event);
+      if (!action) return this.handleNewFrame(event);
       this.handleMove(action, event);
     }
   }
 
-  createNewFrame(e) {
+  handleNewFrame(e) {
     const { pageX: x, pageY: y } = e.pageX ? e : e.targetTouches[0];
     const originalPointerPos = { x, y };
     const container = this.container.current;
@@ -155,7 +152,7 @@ class Cropper extends React.Component {
     // if no action and new selection is allowed, create a new frame
     if (allowNewSelection) {
       event.preventDefault();
-      this.createNewFrame(event);
+      this.handleNewFrame(event);
     }
   }
 
@@ -184,7 +181,6 @@ class Cropper extends React.Component {
     return canvas.toDataURL();
   }
 
-  // get current values
   values() {
     const img = this.img.current;
     const {
@@ -240,6 +236,7 @@ class Cropper extends React.Component {
           height={imageHeight}
           ref={this.img}
           className={[styles.img, styles.source_img].join(' ')}
+          onLoad={() => this.updateImageState()}
         />
       </div>
     );

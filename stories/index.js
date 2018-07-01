@@ -1,12 +1,21 @@
 import React from 'react';
 import { storiesOf } from '@storybook/react';
 import Cropper from '../src';
-import './assets/sample.jpg';
 
 storiesOf('Cropper', module)
-  .add('with bundled image', () => <Cropper src="/stories/assets/sample.jpg" />)
-  .add('with CDN image', () => <Cropper src="https://placehold.it/350x150" />);
-
-storiesOf('img', module)
-  .add('with bundled image', () => <img src="/stories/assets/sample.jpg" />)
-  .add('with CDN image', () => <img src="https://placehold.it/350x150" />);
+  .add('with src only', () => <Cropper src="https://placehold.it/350x350" />)
+  .add('with your mother cb', () => {
+    let cropped = null;
+    return (
+      <div>
+        <Cropper
+          src="https://placehold.it/350x350"
+          onCrop={(getCroppedSrc, getValues) => {
+            cropped = getCroppedSrc();
+            console.log(getValues());
+          }}
+        />
+        <img src={cropped} />
+      </div>
+    );
+  });
