@@ -1,0 +1,75 @@
+.n,
+.s,
+.e,
+.e,
+.ne,
+.nw,
+.se,
+.sw {
+  z-index: 10;
+}
+
+.n,
+.s {
+  cursor: ns-resize;
+}
+.e,
+.w {
+  cursor: ew-resize;
+}
+.ne,
+.sw {
+  cursor: nesw-resize;
+}
+.nw,
+.se {
+  cursor: nwse-resize;
+}
+
+.inner {
+  border: 1px solid #ff0000;
+  background: transparent;
+  display: block;
+  width: 7px;
+  height: 7px;
+  padding: 0px;
+  margin: 0px;
+  position: absolute;
+}
+
+.n > .inner {
+  top: -5px;
+  left: 50%;
+  margin-left: -4px;
+}
+.s > .inner {
+  bottom: -5px;
+  left: 50%;
+  margin-left: -4px;
+}
+.e > .inner {
+  right: -5px;
+  top: 50%;
+  margin-top: -4px;
+}
+.w > .inner {
+  left: -5px;
+  top: 50%;
+  margin-top: -4px;
+}
+.ne > .inner {
+  top: -5px;
+  right: -5px;
+}
+.se > .inner {
+  bottom: -5px;
+  right: -5px;
+}
+.nw > .inner {
+  top: -5px;
+  left: -5px;
+}
+.sw > .inner {
+  bottom: -5px;
+  left: -5px;
+}

@@ -1,57 +1,97 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-
-// Style
-import styles from './styles.css';
+import React from "react";
+import PropTypes from "prop-types";
 
 // Components
-import AnchorPoint from './components/AnchorPoint';
-import AnchorLine from './components/AnchorLine';
+import AnchorPoint from "./components/AnchorPoint";
+import AnchorLine from "./components/AnchorLine";
 
 // Utils
-import Action from './utils/Action';
-import getNewRect from './utils/getNewRect';
-import getStyleFromRect from './utils/getStyleFromRect';
+import Action from "./utils/Action";
+import getNewRect from "./utils/getNewRect";
+import getStyleFromRect from "./utils/getStyleFromRect";
+import getScaledRect from "./utils/getScaledRect";
+import safelyInvoke from "./utils/safelyInvoke";
 
-const ZERO_RECT = { x: 100, y: 100, width: 100, height: 100 };
+// Style
+import styles from "./styles.css";
 
-/* eslint-disable react/no-deprecated */
-/* eslint-disable react/no-find-dom-node */
 class Cropper extends React.Component {
+  static propTypes = {
+    src: PropTypes.string.isRequired,
+    rect: PropTypes.shape({
+      x: PropTypes.number,
+      y: PropTypes.number,
+      width: PropTypes.number,
+      height: PropTypes.number
+    }),
+    allowNewSelection: PropTypes.bool,
+    onCropBegin: PropTypes.func,
+    onCropChange: PropTypes.func,
+    onCropEnd: PropTypes.func
+  };
+
+  static defaultProps = {
+    allowNewSelection: true,
+    rect: null,
+    onCropBegin: null,
+    onCropChange: null,
+    onCropEnd: null
+  };
+
+  constructor(props) {
+    super(props);
+
+    this.handleDrag = this.handleDrag.bind(this);
+    this.handleDragEnd = this.handleDragEnd.bind(this);
+    this.handleDragBegin = this.handleDragBegin.bind(this);
+    this.invokeCropHandler = this.invokeCropHandler.bind(this);
+    this.getDataUrl = this.getDataUrl.bind(this);
+    this.getCroppedImageRect = this.getCroppedImageRect.bind(this);
+  }
+
   state = {
-    imageWidth: '100%',
-    imageHeight: 'auto',
-    originalPointerPos: { x: 0, y: 0 },
-    originalRect: ZERO_RECT,
-    currentRect: ZERO_RECT,
+    image: {
+      width: "100%",
+      height: "auto",
+      isLoaded: false
+    },
+    originalPointerPos: null,
+    originalRect: null,
+    currentRect: null,
     isDragging: false,
-    action: null,
-    imageLoaded: false,
+    action: null
   };
 
   static getDerivedStateFromProps(props, state) {
-    const { rect, src } = props;
+    const { src, rect } = props;
+
+    const newRectState = {
+      originalRect: rect || state.originalRect,
+      currentRect: rect || state.currentRect
+    };
 
     // update image src if changed
     if (src !== state.previousSrc) {
-      return { src };
+      return {
+        ...newRectState,
+        image: { ...state.image, src }
+      };
     }
-
-    return { originalRect: rect, currentRect: rect };
+    // return newRectState;
   }
 
   componentDidMount() {
-    document.addEventListener('mousemove', this.handleDrag.bind(this));
-    document.addEventListener('touchmove', this.handleDrag.bind(this));
-    document.addEventListener('mouseup', this.handleDragStop.bind(this));
-    document.addEventListener('touchend', this.handleDragStop.bind(this));
+    document.addEventListener("mousemove", this.handleDrag);
+    document.addEventListener("touchmove", this.handleDrag);
+    document.addEventListener("mouseup", this.handleDragEnd);
+    document.addEventListener("touchend", this.handleDragEnd);
   }
 
   componentWillUnmount() {
-    document.removeEventListener('mousemove', this.handleDrag.bind(this));
-    document.removeEventListener('touchmove', this.handleDrag.bind(this));
-    document.removeEventListener('mouseup', this.handleDragStop.bind(this));
-    document.removeEventListener('touchend', this.handleDragStop.bind(this));
+    document.removeEventListener("mousemove", this.handleDrag);
+    document.removeEventListener("touchmove", this.handleDrag);
+    document.removeEventListener("mouseup", this.handleDragEnd);
+    document.removeEventListener("touchend", this.handleDragEnd);
   }
 
   container = React.createRef();
@@ -60,55 +100,37 @@ class Cropper extends React.Component {
   frameNode = React.createRef();
   cloneImg = React.createRef();
 
-  // initialize style, component did mount or component updated.
-  initStyles() {
-    const container = this.container.current;
-    this.setState({ imageWidth: container.offsetWidth });
-  }
-
   updateImageState() {
     const img = this.img.current;
     if (img && img.naturalWidth) {
-      // image scaling
-      const imageHeight = parseInt(
-        (img.offsetWidth / img.naturalWidth) * img.naturalHeight
-      );
-      // resize imageHeight
-      this.setState({ imageHeight, imageLoaded: true }, this.initStyles);
+      this.setState({
+        image: {
+          height: (img.offsetWidth / img.naturalWidth) * img.naturalHeight,
+          width: this.container.current.offsetWidth,
+          isLoaded: true
+        }
+      });
     }
   }
 
-  handleMove(action, e) {
-    const {
-      originalRect,
-      originalPointerPos,
-      imageHeight,
-      imageWidth,
-    } = this.state;
-    const { pageX: x, pageY: y } = e.pageX ? e : e.targetTouches[0];
+  moveCropper(action, event) {
+    const { originalRect, originalPointerPos, image } = this.state;
+    const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
     const currentRect = getNewRect({
       originalRect,
       originalPointerPos,
       currentPointerPos: { x, y },
       action,
-      imageSize: { height: imageHeight, width: imageWidth },
+      imageSize: image
     });
 
-    this.setState({ currentRect });
+    this.setState({ currentRect }, () => {
+      this.invokeCropHandler(this.props.onCropChange);
+    });
   }
 
-  handleDrag(event) {
-    if (this.state.isDragging) {
-      event.preventDefault();
-      const { action } = this.state;
-
-      if (!action) return this.handleNewFrame(event);
-      this.handleMove(action, event);
-    }
-  }
-
-  handleNewFrame(e) {
-    const { pageX: x, pageY: y } = e.pageX ? e : e.targetTouches[0];
+  cropFromNewRegion(event) {
+    const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
     const originalPointerPos = { x, y };
     const container = this.container.current;
     const { offsetLeft, offsetTop } = container;
@@ -116,7 +138,7 @@ class Cropper extends React.Component {
       x: x - offsetLeft,
       y: y - offsetTop,
       width: 0,
-      height: 0,
+      height: 0
     };
 
     this.setState({
@@ -124,16 +146,35 @@ class Cropper extends React.Component {
       currentRect: rect,
       originalRect: rect,
       action: Action.SOUTH_EAST,
-      isDragging: true,
+      isDragging: true
     });
   }
 
-  handleDragStart(event) {
+  /**
+   * Invokes the crop event handlers passed as prop with lazily-evaluatable
+   * data.
+   */
+  invokeCropHandler(handler) {
+    safelyInvoke(handler)({
+      getDataUrl: () => this.getDataUrl(),
+      getRectValues: () => ({
+        cropper: this.state.currentRect,
+        image: this.getCroppedImageRect()
+      })
+    });
+  }
+
+  /* POINTER EVENT HANDLERS */
+
+  /**
+   * Event handler for when the pointer dragging begins.
+   */
+  handleDragBegin(event) {
     const { allowNewSelection } = this.props;
     const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
     const action =
-      event.target.getAttribute('data-action') ||
-      event.target.parentNode.getAttribute('data-action');
+      event.target.getAttribute("data-action") ||
+      event.target.parentNode.getAttribute("data-action");
     const originalPointerPos = { x, y };
 
     // resize or move the selection if:
@@ -141,142 +182,141 @@ class Cropper extends React.Component {
     // 2. user is dragging the selection
     if (action) {
       event.preventDefault();
-      return this.setState(state => ({
-        originalPointerPos,
-        originalRect: state.currentRect,
-        isDragging: true,
-        action,
-      }));
+      this.setState(
+        state => ({
+          originalPointerPos,
+          originalRect: state.currentRect,
+          isDragging: true,
+          action
+        }),
+        () => this.invokeCropHandler(this.props.onCropBegin)
+      );
+      return;
     }
-
-    // if no action and new selection is allowed, create a new frame
+    // otherwise, if no action and new selection is allowed, create a new frame
     if (allowNewSelection) {
       event.preventDefault();
-      this.handleNewFrame(event);
+      this.cropFromNewRegion(event);
     }
   }
 
-  handleDragStop(event) {
+  /**
+   * Event handler for when the pointer drags.
+   */
+  handleDrag(event) {
     if (this.state.isDragging) {
       event.preventDefault();
+      const { action } = this.state;
 
-      this.setState(state => ({
-        originalRect: state.currentRect,
-        isDragging: false,
-        action: null,
-      }));
+      if (!action) return this.cropFromNewRegion(event);
+      this.moveCropper(action, event);
     }
   }
 
-  crop() {
-    const img = this.img.current;
-    const { x, y, width, height } = this.state.currentRect;
+  /**
+   * Event handler for when the pointer dragging ends.
+   */
+  handleDragEnd(event) {
+    if (this.state.isDragging) {
+      event.preventDefault();
+      this.setState(
+        state => ({
+          originalRect: state.currentRect,
+          isDragging: false,
+          action: null
+        }),
+        () => this.invokeCropHandler(this.props.onCropEnd)
+      );
+    }
+  }
 
-    const canvas = document.createElement('canvas');
+  /* UTILITY FUNCTIONS */
+
+  /**
+   * Gets the data URL of the cropped portion of the image. This is a
+   * computationally expensive operation.
+   */
+  getDataUrl() {
+    const img = this.img.current;
+    const { x, y, width, height } = this.getCroppedImageRect();
+
+    const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     canvas
-      .getContext('2d')
+      .getContext("2d")
       .drawImage(img, x, y, width, height, 0, 0, width, height);
     return canvas.toDataURL();
   }
 
-  values() {
-    const img = this.img.current;
-    const {
-      frameWidth,
-      frameHeight,
-      originX,
-      originY,
-      imageWidth,
-      imageHeight,
-    } = this.state;
-
-    // crop accroding image's natural width
-    const _scale = img.naturalWidth / imageWidth;
-    const realFrameWidth = frameWidth * _scale;
-    const realFrameHeight = frameHeight * _scale;
-    const realOriginX = originX * _scale;
-    const realOriginY = originY * _scale;
-
-    return {
-      display: {
-        width: frameWidth,
-        height: frameHeight,
-        x: originX,
-        y: originY,
-        imageWidth,
-        imageHeight,
-      },
-      original: {
-        width: realFrameWidth,
-        height: realFrameHeight,
-        x: realOriginX,
-        y: realOriginY,
-        imageWidth: img.naturalWidth,
-        imageHeight: img.naturalHeight,
-      },
-    };
+  /**
+   * Gets the `Rect` cropped portion of the raw image.
+   */
+  getCroppedImageRect() {
+    return getScaledRect({
+      rect: this.state.currentRect,
+      scale: this.img.current.naturalWidth / this.container.current.offsetWidth
+    });
   }
 
-  render() {
-    const {
-      isDragging,
-      imageHeight,
-      imageWidth,
-      imageLoaded,
-      src,
-    } = this.state;
+  /* RENDER FUNCTIONS */
 
-    const imageNode = (
-      <div className={styles.source} ref={this.sourceNode}>
-        <img
-          src={src}
-          width={imageWidth}
-          height={imageHeight}
-          ref={this.img}
-          className={[styles.img, styles.source_img].join(' ')}
-          onLoad={() => this.updateImageState()}
-        />
-      </div>
-    );
+  getCursorStyle = () => {
+    // show crosshair as cursor if there is no cropped region
+    if (!this.state.currentRect && this.props.allowNewSelection)
+      return styles.uncropped;
+    // show grabbing hand as cursor if currently dragging
+    if (this.state.isDragging) return styles.cropping;
+    // otherwise, use whatever default cursor style there is
+    return "";
+  };
+
+  render() {
+    const { isDragging, image, currentRect } = this.state;
 
     return (
       <div
-        onMouseDown={this.handleDragStart.bind(this)}
-        onTouchStart={this.handleDragStart.bind(this)}
-        style={{
-          position: 'relative',
-          height: imageHeight,
-        }}
         ref={this.container}
+        onMouseDown={this.handleDragBegin}
+        onTouchStart={this.handleDragBegin}
+        className={[styles.Cropper, this.getCursorStyle()].join(" ")}
+        style={{ height: image.height }}
       >
-        {imageNode}
-        {imageLoaded ? (
+        <div className={styles.source} ref={this.sourceNode}>
+          <img
+            ref={this.img}
+            src={image.src}
+            width={image.width}
+            height={image.height}
+            className={[styles.img, styles.source_img].join(" ")}
+            onLoad={() => this.updateImageState()}
+          />
+        </div>
+        {image.isLoaded && currentRect ? (
           <div>
             <div className={styles.modal} />
             {/* frame container */}
             <div
+              ref={this.frameNode}
               className={styles.frame}
               style={{
                 ...(isDragging ? styles.dragging_frame : {}),
                 ...getStyleFromRect(this.state.currentRect),
-                display: 'block',
+                display: "block"
               }}
-              ref={this.frameNode}
             >
               {/* clone img */}
               <div className={styles.clone}>
                 <img
-                  src={src}
-                  width={imageWidth}
-                  height={imageHeight}
+                  ref={this.cloneImg}
+                  src={image.src}
+                  width={image.width}
+                  height={image.height}
                   className={styles.img}
                   style={{
                     marginLeft: -1 * this.state.currentRect.x,
-                    marginTop: -1 * this.state.currentRect.y,
+                    marginTop: -1 * this.state.currentRect.y
                   }}
-                  ref={this.cloneImg}
                 />
               </div>
 
@@ -297,26 +337,5 @@ class Cropper extends React.Component {
     );
   }
 }
-
-Cropper.propTypes = {
-  src: PropTypes.string.isRequired,
-  rect: PropTypes.shape({
-    x: PropTypes.number,
-    y: PropTypes.number,
-    width: PropTypes.number,
-    height: PropTypes.number,
-  }),
-  allowNewSelection: PropTypes.bool,
-};
-
-Cropper.defaultProps = {
-  allowNewSelection: true,
-  rect: {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  },
-};
 
 export default Cropper;
