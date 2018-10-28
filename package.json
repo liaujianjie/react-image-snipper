@@ -56,7 +56,7 @@
     "react-dom": "^16.6.0"
   },
   "jest": {
-    "setupTestFrameworkScriptFile": "<rootDir>/config/enzyme.js",
+    "setupTestFrameworkScriptFile": "<rootDir>/config/setupJest.js",
     "moduleNameMapper": {
       "\\.css$": "identity-obj-proxy"
     }
