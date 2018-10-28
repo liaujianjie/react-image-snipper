@@ -7,7 +7,7 @@
     "test": "jest src",
     "test:watch": "jest src --watch",
     "test:coverage": "jest src --coverage",
-    "test:ci": "jest src --ci && codecov",
+    "test:ci": "npm run lint && jest src --ci && codecov",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
     "precommit": "lint-staged",
     "lint": "eslint .",
