@@ -1,17 +1,18 @@
 {
   "name": "react-image-snipper",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "react component for cropping images",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "jest src",
-    "test:watch": "jest src --watch",
-    "test:coverage": "jest src --coverage",
-    "test:ci": "npm run lint && jest src --ci && codecov",
-    "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
-    "precommit": "lint-staged",
+    "build": "webpack --config config/webpack.prod.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "precommit": "lint-staged",
+    "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
+    "test": "jest src",
+    "test:ci": "npm run lint && jest src --ci && codecov",
+    "test:coverage": "jest src --coverage",
+    "test:watch": "jest src --watch"
   },
   "keywords": [
     "react",
@@ -31,9 +32,14 @@
     ]
   },
   "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.0.0",
     "@storybook/react": "^4.0.0-alpha.10",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.6",
+    "babel-loader": "^8.0.4",
     "codecov": "^3.1.0",
     "css-loader": "^0.28.11",
     "enzyme": "^3.7.0",
@@ -56,7 +62,8 @@
     "ts-loader": "^4.5.0",
     "webpack": "^4.23.1",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.10"
+    "webpack-dev-server": "^3.1.10",
+    "webpack-merge": "^4.1.4"
   },
   "dependencies": {
     "prop-types": "^15.6.2",
