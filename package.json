@@ -69,40 +69,5 @@
     "snapshotSerializers": [
       "enzyme-to-json/serializer"
     ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:jest/recommended",
-      "plugin:prettier/recommended"
-    ],
-    "globals": {
-      "window": true,
-      "document": true
-    },
-    "plugins": [
-      "import",
-      "prettier",
-      "react",
-      "jest"
-    ],
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "ecmaVersion": 6,
-      "ecmaFeatures": {
-        "jsx": true
-      }
-    },
-    "env": {
-      "es6": true,
-      "node": true,
-      "jest/globals": true
-    }
-  },
-  "prettier": {
-    "printWidth": 80,
-    "singleQuote": true,
-    "trailingComma": "es5"
   }
 }
