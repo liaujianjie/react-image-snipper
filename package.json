@@ -7,6 +7,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest src --coverage",
+    "test:ci": "jest src --ci",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
     "precommit": "lint-staged",
     "lint": "eslint .",
