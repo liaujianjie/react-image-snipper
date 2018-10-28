@@ -7,7 +7,9 @@
     "test": "jest src --watch",
     "test:coverage": "jest src --coverage",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [
     "react",
