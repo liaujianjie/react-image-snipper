@@ -1,24 +1,24 @@
-import React from "react";
-import { storiesOf } from "@storybook/react";
-import Cropper from "../src";
+import React from 'react';
+import { storiesOf } from '@storybook/react';
+import Cropper from '../src';
 
-storiesOf("Cropper", module)
-  .add("without any props", () => <Cropper />)
-  .add("with cross-origin image source", () => (
+storiesOf('Cropper', module)
+  .add('without any props', () => <Cropper />)
+  .add('with cross-origin image source', () => (
     <Cropper src="https://placehold.it/350x350" />
   ))
-  .add("with same-origin image source", () => <Cropper src="/testimage.jpg" />)
-  .add("with controlled rect", () => (
+  .add('with same-origin image source', () => <Cropper src="/testimage.jpg" />)
+  .add('with controlled rect', () => (
     <Cropper
       src="/testimage.jpg"
       rect={{ x: 20, y: 30, width: 40, height: 50 }}
     />
   ))
-  .add("with onCropChange handler", () => {
+  .add('with onCropChange handler', () => {
     class StatefulExample extends React.Component {
       state = {
         cropped: null,
-        rect: null
+        rect: null,
       };
 
       render() {
@@ -38,11 +38,11 @@ storiesOf("Cropper", module)
 
     return <StatefulExample />;
   })
-  .add("with onCropEnd handler", () => {
+  .add('with onCropEnd handler', () => {
     class StatefulExample extends React.Component {
       state = {
         cropped: null,
-        rect: null
+        rect: null,
       };
 
       render() {
