@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/liaujianjie/react-image-snipper.svg?style=svg)](https://circleci.com/gh/liaujianjie/react-image-snipper)
+
 ⚠️ **Work in progress!** ⚠️
 
 # react-image-snipper
