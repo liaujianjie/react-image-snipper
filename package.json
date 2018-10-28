@@ -4,8 +4,8 @@
   "description": "react component for cropping images",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "jest src",
+    "test:watch": "jest src --watch",
     "test:coverage": "jest src --coverage",
     "test:ci": "jest src --ci && codecov",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
@@ -66,6 +66,9 @@
   "jest": {
     "coverageDirectory": "./coverage",
     "collectCoverage": true,
+    "collectCoverageFrom": [
+      "<rootDir>/src/**/*.js"
+    ],
     "setupTestFrameworkScriptFile": "<rootDir>/config/setupJest.js",
     "moduleNameMapper": {
       "\\.css$": "identity-obj-proxy"
