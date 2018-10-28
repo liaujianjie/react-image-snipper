@@ -7,7 +7,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest src --coverage",
-    "test:ci": "jest src --ci",
+    "test:ci": "jest src --ci && codecov",
     "start": "start-storybook -p 9001 -c ./config/storybook -s ./stories/static",
     "precommit": "lint-staged",
     "lint": "eslint .",
@@ -63,6 +63,8 @@
     "react-dom": "^16.6.0"
   },
   "jest": {
+    "coverageDirectory": "./coverage",
+    "collectCoverage": true,
     "setupTestFrameworkScriptFile": "<rootDir>/config/setupJest.js",
     "moduleNameMapper": {
       "\\.css$": "identity-obj-proxy"
