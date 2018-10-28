@@ -1,4 +1,4 @@
-import Action, { GroupedAction, ActionValue } from './Action';
+import Action, { GroupedAction } from './Action';
 import { Rect, Point, Size } from './types';
 
 /**
@@ -19,7 +19,7 @@ const getNewRect = ({
   originalPointerPos: Point;
   currentPointerPos: Point;
   imageSize: Size;
-  action: ActionValue;
+  action: Action;
 }): Rect => {
   const rectMap = getRectMap(action);
   const pointerOffset = {
@@ -71,12 +71,7 @@ const restrictToRange = ({ value, max }: { value: number; max: number }) => {
   return value;
 };
 
-const correctNegatives = ({
-  x,
-  y,
-  width,
-  height,
-}: Rect): Rect => {
+const correctNegatives = ({ x, y, width, height }: Rect): Rect => {
   const flipX = width < 0;
   const flipY = height < 0;
   const newX = flipX ? x + width : x;
@@ -90,36 +85,36 @@ const correctNegatives = ({
   };
 };
 
-const getRectMap = (action: ActionValue): Rect => ({
+const getRectMap = (action: Action): Rect => ({
   x: getRectMapX(action),
   y: getRectMapY(action),
   width: getRectMapWidth(action),
   height: getRectMapHeight(action),
 });
 
-const getRectMapX = (action: ActionValue) => {
-  const positive: ActionValue[] = [Action.MOVE, ...GroupedAction.WEST];
+const getRectMapX = (action: Action) => {
+  const positive: Action[] = [Action.MOVE, ...GroupedAction.WEST];
   if (positive.includes(action)) return 1;
   return 0;
 };
 
-const getRectMapY = (action: ActionValue) => {
-  const positive: ActionValue[] = [Action.MOVE, ...GroupedAction.NORTH];
+const getRectMapY = (action: Action) => {
+  const positive: Action[] = [Action.MOVE, ...GroupedAction.NORTH];
   if (positive.includes(action)) return 1;
   return 0;
 };
 
-const getRectMapWidth = (action: ActionValue) => {
-  const positive: ActionValue[] = GroupedAction.EAST;
-  const negative: ActionValue[] = GroupedAction.WEST;
+const getRectMapWidth = (action: Action) => {
+  const positive: Action[] = GroupedAction.EAST;
+  const negative: Action[] = GroupedAction.WEST;
   if (positive.includes(action)) return 1;
   if (negative.includes(action)) return -1;
   return 0;
 };
 
-const getRectMapHeight = (action: ActionValue) => {
-  const positive: ActionValue[] = GroupedAction.SOUTH;
-  const negative: ActionValue[] = GroupedAction.NORTH;
+const getRectMapHeight = (action: Action) => {
+  const positive: Action[] = GroupedAction.SOUTH;
+  const negative: Action[] = GroupedAction.NORTH;
   if (positive.includes(action)) return 1;
   if (negative.includes(action)) return -1;
   return 0;

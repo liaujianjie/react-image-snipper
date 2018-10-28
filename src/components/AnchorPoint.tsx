@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as styles from './AnchorPoint.css';
-import Action, { ActionValue } from '../utils/Action';
+import Action from '../utils/Action';
 
-type Props = {
-  point: ActionValue;
-};
+interface AnchorPointProps {
+  point: Action;
+}
 
-const AnchorPoint: React.SFC<Props> & { Point: typeof Action } = ({
+const AnchorPoint: React.SFC<AnchorPointProps> & { Point: typeof Action } = ({
   point,
 }) => {
   return (
@@ -18,7 +18,6 @@ const AnchorPoint: React.SFC<Props> & { Point: typeof Action } = ({
 };
 
 AnchorPoint.Point = Action;
-
 AnchorPoint.propTypes = {
   point: PropTypes.oneOf(Object.values(Action)).isRequired,
 };
