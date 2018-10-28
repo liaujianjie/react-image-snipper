@@ -5,6 +5,11 @@
     "plugin:jest/recommended",
     "plugin:prettier/recommended"
   ],
+  "settings": {
+    "react": {
+      "version": "16.6"
+    }
+  },
   "globals": {
     "window": true,
     "document": true
