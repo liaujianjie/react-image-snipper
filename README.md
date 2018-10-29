@@ -19,3 +19,8 @@ This repo uses [Storybook](https://storybook.js.org/) as the development setup a
 2. Ensure you are running a compatible Node.js and NPM version (tested on Node.js 10.2.1 and NPM 6.1.0)
 3. `npm i` to install dependencies
 4. `npm start` to start Storybook
+
+
+## Contributing
+
+Read our [contributing guide](https://github.com/liaujianjie/react-image-snipper/blob/master/CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Jest.
