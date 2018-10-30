@@ -6,7 +6,7 @@ import AnchorPoint from './components/AnchorPoint';
 import AnchorLine from './components/AnchorLine';
 
 // Utils
-import Action from './utils/Action';
+import Action, { ActionValue } from './utils/Action';
 import getNewRect from './utils/getNewRect';
 import getStyleFromRect from './utils/getStyleFromRect';
 import getScaledRect from './utils/getScaledRect';
@@ -14,8 +14,32 @@ import safelyInvoke from './utils/safelyInvoke';
 
 // Style
 import styles from './styles.css';
+import { Rect, Point } from './utils/types';
 
-class Cropper extends React.Component {
+type Props = {
+  src: string;
+  rect?: Rect;
+  allowNewSelection?: boolean;
+  onCropBegin?: () => void;
+  onCropChange?: () => void;
+  onCropEnd?: () => void;
+};
+
+type State = {
+  previousSrc: string | null;
+  image: {
+    width: string | number;
+    height: string | number;
+    isLoaded: boolean;
+  };
+  originalPointerPos: Point | null;
+  originalRect: Point | null;
+  currentRect: Rect | null;
+  isDragging: boolean;
+  action: ActionValue | null;
+};
+
+class Cropper extends React.Component<Props, State> {
   static propTypes = {
     src: PropTypes.string.isRequired,
     rect: PropTypes.shape({
@@ -38,7 +62,7 @@ class Cropper extends React.Component {
     onCropEnd: null,
   };
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.handleDrag = this.handleDrag.bind(this);
@@ -50,6 +74,7 @@ class Cropper extends React.Component {
   }
 
   state = {
+    previousSrc: null,
     image: {
       width: '100%',
       height: 'auto',
@@ -62,7 +87,7 @@ class Cropper extends React.Component {
     action: null,
   };
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props: Props, state: State) {
     const { src, rect } = props;
 
     const newRectState = {
@@ -77,7 +102,7 @@ class Cropper extends React.Component {
         image: { ...state.image, src },
       };
     }
-    // return newRectState;
+    return null;
   }
 
   componentDidMount() {
@@ -94,28 +119,38 @@ class Cropper extends React.Component {
     document.removeEventListener('touchend', this.handleDragEnd);
   }
 
-  container = React.createRef();
-  sourceNode = React.createRef();
-  img = React.createRef();
-  frameNode = React.createRef();
-  cloneImg = React.createRef();
+  container = React.createRef<HTMLDivElement>();
+  sourceNode = React.createRef<HTMLDivElement>();
+  img = React.createRef<HTMLImageElement>();
+  frameNode = React.createRef<HTMLDivElement>();
+  cloneImg = React.createRef<HTMLImageElement>();
 
   updateImageState() {
     const img = this.img.current;
-    if (img && img.naturalWidth) {
+    const container = this.container.current;
+    if (img && img.naturalWidth && container) {
       this.setState({
         image: {
           height: (img.offsetWidth / img.naturalWidth) * img.naturalHeight,
-          width: this.container.current.offsetWidth,
+          width: container.offsetWidth,
           isLoaded: true,
         },
       });
     }
   }
 
-  moveCropper(action, event) {
+  moveCropper(action: ActionValue, event: MouseOrTouchEvent) {
     const { originalRect, originalPointerPos, image } = this.state;
-    const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
+    if (!originalRect || !originalPointerPos || !image) return;
+    if ('pageX' in event) {
+      event = event as React.MouseEvent;
+    } else {
+      event = event as React.TouchEvent;
+    }
+    const { pageX: x, pageY: y } = isMouseEvent(event)
+      ? event
+      : event.targetTouches[0];
+
     const currentRect = getNewRect({
       originalRect,
       originalPointerPos,
@@ -129,10 +164,13 @@ class Cropper extends React.Component {
     });
   }
 
-  cropFromNewRegion(event) {
-    const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
+  cropFromNewRegion(event: MouseOrTouchEvent) {
+    const { pageX: x, pageY: y } = isMouseEvent(event)
+      ? event
+      : event.targetTouches[0];
     const originalPointerPos = { x, y };
     const container = this.container.current;
+    if (!container) return;
     const { offsetLeft, offsetTop } = container;
     const rect = {
       x: x - offsetLeft,
@@ -169,9 +207,11 @@ class Cropper extends React.Component {
   /**
    * Event handler for when the pointer dragging begins.
    */
-  handleDragBegin(event) {
+  handleDragBegin(event: MouseOrTouchEvent) {
     const { allowNewSelection } = this.props;
-    const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
+    const { pageX: x, pageY: y } = isMouseEvent(event)
+      ? event
+      : event.targetTouches[0];
     const action =
       event.target.getAttribute('data-action') ||
       event.target.parentNode.getAttribute('data-action');
@@ -203,7 +243,7 @@ class Cropper extends React.Component {
   /**
    * Event handler for when the pointer drags.
    */
-  handleDrag(event) {
+  handleDrag(event: MouseOrTouchEvent) {
     if (this.state.isDragging) {
       event.preventDefault();
       const { action } = this.state;
@@ -216,7 +256,7 @@ class Cropper extends React.Component {
   /**
    * Event handler for when the pointer dragging ends.
    */
-  handleDragEnd(event) {
+  handleDragEnd(event: MouseOrTouchEvent) {
     if (this.state.isDragging) {
       event.preventDefault();
       this.setState(
@@ -244,8 +284,8 @@ class Cropper extends React.Component {
     canvas.width = width;
     canvas.height = height;
     canvas
-      .getContext('2d')
-      .drawImage(img, x, y, width, height, 0, 0, width, height);
+      .getContext('2d')!
+      .drawImage(img!, x, y, width, height, 0, 0, width, height);
     return canvas.toDataURL();
   }
 
@@ -254,8 +294,9 @@ class Cropper extends React.Component {
    */
   getCroppedImageRect() {
     return getScaledRect({
-      rect: this.state.currentRect,
-      scale: this.img.current.naturalWidth / this.container.current.offsetWidth,
+      rect: this.state.currentRect!,
+      scale:
+        this.img.current!.naturalWidth / this.container.current!.offsetWidth,
     });
   }
 
@@ -301,7 +342,7 @@ class Cropper extends React.Component {
               className={styles.frame}
               style={{
                 ...(isDragging ? styles.dragging_frame : {}),
-                ...getStyleFromRect(this.state.currentRect),
+                ...getStyleFromRect(this.state.currentRect!),
                 display: 'block',
               }}
             >
@@ -339,3 +380,8 @@ class Cropper extends React.Component {
 }
 
 export default Cropper;
+
+type MouseOrTouchEvent = React.MouseEvent | React.TouchEvent;
+function isMouseEvent(e: MouseOrTouchEvent): e is React.MouseEvent {
+  return (e as React.MouseEvent).pageX !== undefined;
+}

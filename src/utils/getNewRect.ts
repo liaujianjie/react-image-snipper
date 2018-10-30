@@ -1,11 +1,12 @@
-import Action, { GroupedAction } from './Action';
+import Action, { GroupedAction, ActionValue } from './Action';
+import { Rect, Point, Size } from './types';
 
 /**
  * Calculates a new `Rect` from interaction with anchor points or the box itself.
  * @param {Rect} originalRect the original to calculate the new rect from
  * @param {Point} originalPointerPos the original pointer position
  * @param {Point} currentPointerPos the current pointer position
- * @param {Action} action the action
+ * @param {ActionKey} action the action
  */
 const getNewRect = ({
   originalRect,
@@ -13,7 +14,13 @@ const getNewRect = ({
   currentPointerPos,
   imageSize,
   action,
-}) => {
+}: {
+  originalRect: Rect;
+  originalPointerPos: Point;
+  currentPointerPos: Point;
+  imageSize: Size;
+  action: ActionValue;
+}): Rect => {
   const rectMap = getRectMap(action);
   const pointerOffset = {
     x: currentPointerPos.x - originalPointerPos.x,
@@ -30,7 +37,13 @@ const getNewRect = ({
   });
 };
 
-const restrictToSize = ({ originalRect, maxSize }) => {
+const restrictToSize = ({
+  originalRect,
+  maxSize,
+}: {
+  originalRect: Rect;
+  maxSize: Size;
+}): Rect => {
   const maxOrigin = {
     x: maxSize.width - originalRect.width,
     y: maxSize.height - originalRect.height,
@@ -52,13 +65,18 @@ const restrictToSize = ({ originalRect, maxSize }) => {
   };
 };
 
-const restrictToRange = ({ value, max }) => {
+const restrictToRange = ({ value, max }: { value: number; max: number }) => {
   if (value < 0 || max < 0) return 0;
   if (value > max) return max;
   return value;
 };
 
-const correctNegatives = ({ x, y, width, height }) => {
+const correctNegatives = ({
+  x,
+  y,
+  width,
+  height,
+}: Rect): Rect => {
   const flipX = width < 0;
   const flipY = height < 0;
   const newX = flipX ? x + width : x;
@@ -72,36 +90,36 @@ const correctNegatives = ({ x, y, width, height }) => {
   };
 };
 
-const getRectMap = action => ({
+const getRectMap = (action: ActionValue): Rect => ({
   x: getRectMapX(action),
   y: getRectMapY(action),
   width: getRectMapWidth(action),
   height: getRectMapHeight(action),
 });
 
-const getRectMapX = action => {
-  const positive = [Action.MOVE, ...GroupedAction.WEST];
+const getRectMapX = (action: ActionValue) => {
+  const positive: ActionValue[] = [Action.MOVE, ...GroupedAction.WEST];
   if (positive.includes(action)) return 1;
   return 0;
 };
 
-const getRectMapY = action => {
-  const positive = [Action.MOVE, ...GroupedAction.NORTH];
+const getRectMapY = (action: ActionValue) => {
+  const positive: ActionValue[] = [Action.MOVE, ...GroupedAction.NORTH];
   if (positive.includes(action)) return 1;
   return 0;
 };
 
-const getRectMapWidth = action => {
-  const positive = GroupedAction.EAST;
-  const negative = GroupedAction.WEST;
+const getRectMapWidth = (action: ActionValue) => {
+  const positive: ActionValue[] = GroupedAction.EAST;
+  const negative: ActionValue[] = GroupedAction.WEST;
   if (positive.includes(action)) return 1;
   if (negative.includes(action)) return -1;
   return 0;
 };
 
-const getRectMapHeight = action => {
-  const positive = GroupedAction.SOUTH;
-  const negative = GroupedAction.NORTH;
+const getRectMapHeight = (action: ActionValue) => {
+  const positive: ActionValue[] = GroupedAction.SOUTH;
+  const negative: ActionValue[] = GroupedAction.NORTH;
   if (positive.includes(action)) return 1;
   if (negative.includes(action)) return -1;
   return 0;

@@ -1,4 +1,6 @@
-const getStyleFromRect = rect => ({
+import { Rect } from './types';
+
+const getStyleFromRect = (rect: Rect) => ({
   left: rect.x,
   top: rect.y,
   width: rect.width,
