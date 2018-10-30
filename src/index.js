@@ -116,6 +116,9 @@ class Cropper extends React.Component {
   moveCropper(action, event) {
     const { originalRect, originalPointerPos, image } = this.state;
     const { pageX: x, pageY: y } = event.pageX ? event : event.targetTouches[0];
+
+    if (originalPointerPos.y >= image.height) return null;
+
     const currentRect = getNewRect({
       originalRect,
       originalPointerPos,
